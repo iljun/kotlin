@@ -247,7 +247,8 @@ object KSerializerDescriptorResolver {
             propertyFromSerializer.type,
             propertyFromSerializer.typeParameters,
             companionDescriptor.thisAsReceiverParameter,
-            extensionReceiverParameter
+            extensionReceiverParameter,
+            emptyList()
         )
 
         val propertyGetter = PropertyGetterDescriptorImpl(
@@ -280,6 +281,7 @@ object KSerializerDescriptorResolver {
         functionDescriptor.initialize(
             null,
             companionDescriptor.thisAsReceiverParameter,
+            emptyList(),
             functionFromSerializer.typeParameters,
             functionFromSerializer.valueParameters.map { it.copy(functionDescriptor, it.name, it.index) },
             functionFromSerializer.returnType,
@@ -491,6 +493,7 @@ object KSerializerDescriptorResolver {
         f.initialize(
             null,
             thisClass.thisAsReceiverParameter,
+            emptyList(),
             listOf(),
             listOf(vararg),
             kSerializerStarType,
@@ -520,7 +523,7 @@ object KSerializerDescriptorResolver {
         val serialReturnType =
             KotlinTypeFactory.simpleNotNullType(Annotations.EMPTY, serializerClass, listOf(TypeProjectionImpl(newSerializableType)))
 
-        f.initialize(null, thisClass.thisAsReceiverParameter, typeArgs, args, serialReturnType, Modality.FINAL, DescriptorVisibilities.PUBLIC)
+        f.initialize(null, thisClass.thisAsReceiverParameter, emptyList(), typeArgs, args, serialReturnType, Modality.FINAL, DescriptorVisibilities.PUBLIC)
         return f
     }
 
@@ -610,6 +613,7 @@ object KSerializerDescriptorResolver {
         f.initialize(
             null,
             null,
+            emptyList(),
             typeArgs,
             args,
             returnType,
