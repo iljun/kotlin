@@ -45,4 +45,5 @@ class B {
 // EXIST:  const val
 // EXIST:  suspend fun
 // EXIST:  typealias
+// EXIST:  context
 // NOTHING_ELSE

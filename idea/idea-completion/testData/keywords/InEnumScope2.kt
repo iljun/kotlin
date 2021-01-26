@@ -34,6 +34,7 @@ enum class Test {
 // EXIST:  typealias
 // EXIST:  expect
 // EXIST:  actual
+// EXIST:  context
 
 /* TODO: items below are not valid here */
 // EXIST: class

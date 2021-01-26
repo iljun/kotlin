@@ -113,7 +113,8 @@ class KeywordCompletion(private val languageVersionSettingProvider: LanguageVers
             FILE_KEYWORD,
             DYNAMIC_KEYWORD,
             GET_KEYWORD,
-            SET_KEYWORD
+            SET_KEYWORD,
+            CONTEXT_KEYWORD
         ).map { it.value } + "companion object"
     }
 
