@@ -1013,6 +1013,23 @@ public class BodyResolver {
                 localContext != null ? localContext.inferenceSession : null
         );
 
+        if (function instanceof KtFunction) {
+            KtReceiverExpressionList receiverExpressionList = ((KtFunction) function).getReceiverExpressionList();
+            if (receiverExpressionList != null) {
+                ExpressionTypingContext context = ExpressionTypingContext.newContext(
+                        trace, headerScope, outerDataFlowInfo, TypeUtils.NO_EXPECTED_TYPE,
+                        languageVersionSettings, valueParameterResolver.getDataFlowValueFactory()
+                );
+                innerScope = FunctionDescriptorUtil.makeFunctionInnerScopeWithAdditionalReceiverObjects(
+                        receiverExpressionList,
+                        functionDescriptor,
+                        innerScope,
+                        context,
+                        expressionTypingServices
+                );
+            }
+        }
+
         // Synthetic "field" creation
         if (functionDescriptor instanceof PropertyAccessorDescriptor && functionDescriptor.getExtensionReceiverParameter() == null) {
             PropertyAccessorDescriptor accessorDescriptor = (PropertyAccessorDescriptor) functionDescriptor;
