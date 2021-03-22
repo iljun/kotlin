@@ -382,6 +382,9 @@ fun DeclarationDescriptor.isAncestorOf(descriptor: DeclarationDescriptor, strict
 
 fun DeclarationDescriptor.isCompanionObject(): Boolean = DescriptorUtils.isCompanionObject(this)
 
+fun DeclarationDescriptor.isStdLibWithCall(): Boolean = toString()
+    .startsWith("@kotlin.internal.InlineOnly public inline fun <T, R> with(receiver: T, block: T.() -> R): R defined in kotlin")
+
 fun ClassDescriptor.isSubclassOf(superclass: ClassDescriptor): Boolean = DescriptorUtils.isSubclass(this, superclass)
 
 val AnnotationDescriptor.annotationClass: ClassDescriptor?

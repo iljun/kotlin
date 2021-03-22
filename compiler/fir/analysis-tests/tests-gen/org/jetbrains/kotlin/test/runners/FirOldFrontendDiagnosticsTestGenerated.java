@@ -9805,6 +9805,12 @@ public class FirOldFrontendDiagnosticsTestGenerated extends AbstractFirDiagnosti
                 }
 
                 @Test
+                @TestMetadata("plainThisIsDeprecatedInsideWith.kt")
+                public void testPlainThisIsDeprecatedInsideWith() throws Exception {
+                    runTest("compiler/testData/diagnostics/tests/extensions/contextReceivers/plainThisIsDeprecatedInsideWith.kt");
+                }
+
+                @Test
                 @TestMetadata("plusMatrix.kt")
                 public void testPlusMatrix() throws Exception {
                     runTest("compiler/testData/diagnostics/tests/extensions/contextReceivers/plusMatrix.kt");

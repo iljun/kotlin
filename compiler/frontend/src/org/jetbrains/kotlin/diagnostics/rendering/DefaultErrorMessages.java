@@ -470,6 +470,7 @@ public class DefaultErrorMessages {
         MAP.put(DECLARATION_IN_ILLEGAL_CONTEXT, "Declarations are not allowed in this position");
         MAP.put(SETTER_PARAMETER_WITH_DEFAULT_VALUE, "Setter parameters cannot have default values");
         MAP.put(NO_THIS, "'this' is not defined in this context");
+        MAP.put(PLAIN_THIS_IS_DEPRECATED_INSIDE_WITH, "'this' is deprecated inside 'with' function");
         MAP.put(SUPER_NOT_AVAILABLE, "No supertypes are accessible in this context");
         MAP.put(SUPERCLASS_NOT_ACCESSIBLE_FROM_INTERFACE, "Superclass is not accessible from interface");
         MAP.put(AMBIGUOUS_SUPER, "Many supertypes available, please specify the one you mean in angle brackets, e.g. 'super<Foo>'");

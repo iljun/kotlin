@@ -55,7 +55,9 @@ import org.jetbrains.kotlin.resolve.calls.smartcasts.DataFlowValueFactory
 import org.jetbrains.kotlin.resolve.calls.util.CallMaker
 import org.jetbrains.kotlin.resolve.calls.util.FakeCallableDescriptorForObject
 import org.jetbrains.kotlin.resolve.constants.evaluate.ConstantExpressionEvaluator
+import org.jetbrains.kotlin.resolve.descriptorUtil.isStdLibWithCall
 import org.jetbrains.kotlin.resolve.scopes.receivers.*
+import org.jetbrains.kotlin.resolve.source.getPsi
 import org.jetbrains.kotlin.types.ErrorUtils
 import org.jetbrains.kotlin.types.KotlinType
 import org.jetbrains.kotlin.types.TypeUtils
@@ -262,6 +264,25 @@ class CallExpressionResolver(
                     break
                 }
             }
+
+            if (resolvedCall.candidateDescriptor.isStdLibWithCall() && arguments[1] is KtLambdaArgument) {
+                val lambda = (arguments[1] as KtLambdaArgument).getLambdaExpression()
+                lambda?.accept(object : KtVisitorVoid() {
+                    override fun visitKtElement(element: KtElement) {
+                        element.acceptChildren(this)
+                    }
+
+                    override fun visitThisExpression(expression: KtThisExpression) {
+                        if (expression.labelQualifier != null) return
+                        val referenceTarget = context.trace.get(BindingContext.REFERENCE_TARGET, expression.instanceReference)
+                        if (referenceTarget == null || referenceTarget !is FunctionDescriptor) return
+                        if (referenceTarget.source.getPsi() == lambda.functionLiteral) {
+                            context.trace.report(PLAIN_THIS_IS_DEPRECATED_INSIDE_WITH.on(expression))
+                        }
+                    }
+                })
+            }
+
             return createTypeInfo(type, resultFlowInfo, jumpOutPossible, jumpFlowInfo)
         }
 
