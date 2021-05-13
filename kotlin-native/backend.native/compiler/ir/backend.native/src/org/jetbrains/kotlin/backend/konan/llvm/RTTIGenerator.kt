@@ -253,7 +253,7 @@ internal class RTTIGenerator(override val context: Context) : ContextUtils {
                 interfaceTableSize, interfaceTablePtr,
                 reflectionInfo.packageName,
                 reflectionInfo.relativeName,
-                flagsFromClass(irClass),
+                flagsFromClass(irClass) or reflectionInfo.reflectionFlags,
                 context.getLayoutBuilder(irClass).classId,
                 llvmDeclarations.writableTypeInfoGlobal?.pointer,
                 associatedObjects = genAssociatedObjects(irClass)
@@ -496,8 +496,6 @@ internal class RTTIGenerator(override val context: Context) : ContextUtils {
         val objOffsetsPtr = staticData.placeGlobalConstArray("", int32Type, objOffsets)
         val objOffsetsCount = objOffsets.size
 
-        val reflectionInfo = ReflectionInfo(null, null)
-
         val writableTypeInfoType = runtime.writableTypeInfoType
         val writableTypeInfo = if (writableTypeInfoType == null) {
             null
@@ -541,8 +539,8 @@ internal class RTTIGenerator(override val context: Context) : ContextUtils {
                 objOffsets = objOffsetsPtr, objOffsetsCount = objOffsetsCount,
                 interfaces = interfacesPtr, interfacesCount = interfaces.size,
                 interfaceTableSize = interfaceTableSize, interfaceTable = interfaceTablePtr,
-                packageName = reflectionInfo.packageName,
-                relativeName = reflectionInfo.relativeName,
+                packageName = ReflectionInfo.EMPTY.packageName,
+                relativeName = ReflectionInfo.EMPTY.relativeName,
                 flags = flagsFromClass(irClass) or (if (immutable) TF_IMMUTABLE else 0),
                 classId = typeHierarchyInfo.classIdLo,
                 writableTypeInfo = writableTypeInfo,
@@ -557,19 +555,36 @@ internal class RTTIGenerator(override val context: Context) : ContextUtils {
 
     private val OverriddenFunctionInfo.implementation get() = getImplementation(context)
 
-    data class ReflectionInfo(val packageName: String?, val relativeName: String?)
+    data class ReflectionInfo(val packageName: String?, val relativeName: String?, val reflectionFlags: Int) {
+        companion object {
+            val EMPTY = ReflectionInfo(null, null, 0)
+        }
+    }
 
-    private fun getReflectionInfo(irClass: IrClass): ReflectionInfo = when {
-        irClass.isAnonymousObject -> ReflectionInfo(packageName = null, relativeName = null)
+    private fun getReflectionInfo(irClass: IrClass): ReflectionInfo {
+        val packageName: String = irClass.findPackage().fqName.asString() // Compute and store package name in TypeInfo anyways.
+        val relativeName: String?
+        val flags: Int
 
-        irClass.isLocal -> ReflectionInfo(packageName = null, relativeName = irClass.name.asString())
-
-        else -> ReflectionInfo(
-                packageName = irClass.findPackage().fqNameForIrSerialization.asString(),
+        when {
+            irClass.isAnonymousObject -> {
+                relativeName = context.getLocalClassName(irClass)
+                flags = 0 // Forbid to use package and relative names in KClass.[simpleName|qualifiedName].
+            }
+            irClass.isLocal -> {
+                relativeName = context.getLocalClassName(irClass)
+                flags = TF_REFLECTION_SHOW_REL_NAME // Only allow relative name to be used in KClass.simpleName.
+            }
+            else -> {
                 relativeName = generateSequence(irClass) { it.parent as? IrClass }
                         .toList().reversed()
                         .joinToString(".") { it.name.asString() }
-        )
+                flags = TF_REFLECTION_SHOW_PKG_NAME or TF_REFLECTION_SHOW_REL_NAME // Allow both package and relative names
+                // to be used in KClass.[simpleName|qualifiedName].
+            }
+        }
+
+        return ReflectionInfo(packageName, relativeName, flags)
     }
 
     fun dispose() {
@@ -586,4 +601,5 @@ private const val TF_LEAK_DETECTOR_CANDIDATE = 16
 private const val TF_SUSPEND_FUNCTION = 32
 private const val TF_HAS_FINALIZER = 64
 private const val TF_HAS_FREEZE_HOOK = 128
-
+private const val TF_REFLECTION_SHOW_PKG_NAME = 256
+private const val TF_REFLECTION_SHOW_REL_NAME = 512
