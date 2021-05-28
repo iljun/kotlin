@@ -529,4 +529,20 @@ MemoryState* kotlin::mm::GetMemoryState() {
     return ToMemoryState(ThreadRegistry::Instance().CurrentThreadDataNode());
 }
 
+extern "C" RUNTIME_NOTHROW void Kotlin_mm_checkStateAtExternalFunctionCall(const char* caller, const char *callee) noexcept {
+    static thread_local bool recursiveCallGuard = false;
+    if (recursiveCallGuard) return;
+    if (!mm::ThreadRegistry::Instance().IsCurrentThreadRegistered()) return;
+    recursiveCallGuard = true;
+
+    auto *threadData = mm::GetMemoryState()->GetThreadData();
+    auto actualState = threadData->state();
+    RuntimeAssert(
+            actualState == ThreadState::kNative,
+            "Expected kNative thread state at call of function %s by function %s",
+            callee, caller);
+
+    recursiveCallGuard = false;
+}
+
 const bool kotlin::kSupportsMultipleMutators = kotlin::gc::kSupportsMultipleMutators;
