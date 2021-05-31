@@ -1,4 +1,4 @@
-// !DIAGNOSTICS: -UNUSED_PARAMETER,-UNUSED_VARIABLE
+// !DIAGNOSTICS: -UNUSED_PARAMETER,-UNUSED_VARIABLE,-EXPERIMENTAL_API_USAGE
 // SKIP_TXT
 
 // FILE: test.kt
@@ -8,24 +8,24 @@ import kotlinx.serialization.json.*
 object Instance
 
 val defaultWarn = <!JSON_FORMAT_REDUNDANT_DEFAULT!>Json {}<!>
-val receiverWarn = <!JSON_FORMAT_REDUNDANT!>Json {encodeDefaults = true}<!>.<!EXPERIMENTAL_API_USAGE!>encodeToString<!>(Instance)
+val receiverWarn = <!JSON_FORMAT_REDUNDANT!>Json {encodeDefaults = true}<!>.encodeToString(Instance)
 val noWarnFormat = Json {encodeDefaults = true}
-val receiverNoWarn = noWarnFormat.<!EXPERIMENTAL_API_USAGE!>encodeToString<!>(Instance)
-val defaultNoWarn = Json.<!EXPERIMENTAL_API_USAGE!>encodeToString<!>(Instance)
+val receiverNoWarn = noWarnFormat.encodeToString(Instance)
+val defaultNoWarn = Json.encodeToString(Instance)
 
 class SomeContainerClass {
     val memberDefaultWarn = <!JSON_FORMAT_REDUNDANT_DEFAULT!>Json {}<!>
-    val memberReceiverWarn = <!JSON_FORMAT_REDUNDANT!>Json {encodeDefaults = true}<!>.<!EXPERIMENTAL_API_USAGE!>encodeToString<!>(Instance)
+    val memberReceiverWarn = <!JSON_FORMAT_REDUNDANT!>Json {encodeDefaults = true}<!>.encodeToString(Instance)
     val memberNoWarnFormat = Json {encodeDefaults = true}
-    val memberReceiverNoWarn = noWarnFormat.<!EXPERIMENTAL_API_USAGE!>encodeToString<!>(Instance)
-    val memberDefaultNoWarn = Json.<!EXPERIMENTAL_API_USAGE!>encodeToString<!>(Instance)
+    val memberReceiverNoWarn = noWarnFormat.encodeToString(Instance)
+    val memberDefaultNoWarn = Json.encodeToString(Instance)
 
     fun testDefaultWarnings() {
         <!JSON_FORMAT_REDUNDANT_DEFAULT!>Json {}<!>
         <!JSON_FORMAT_REDUNDANT_DEFAULT!>Json() {}<!>
-        <!JSON_FORMAT_REDUNDANT_DEFAULT!>Json {}<!>.<!EXPERIMENTAL_API_USAGE!>encodeToString<!>(Any())
-        <!JSON_FORMAT_REDUNDANT_DEFAULT!>Json {}<!>.<!EXPERIMENTAL_API_USAGE!>encodeToString<!>(Instance)
-        <!JSON_FORMAT_REDUNDANT_DEFAULT!>Json { /*some comment*/ }<!>.<!EXPERIMENTAL_API_USAGE!>encodeToString<!>(Instance)
+        <!JSON_FORMAT_REDUNDANT_DEFAULT!>Json {}<!>.encodeToString(Any())
+        <!JSON_FORMAT_REDUNDANT_DEFAULT!>Json {}<!>.encodeToString(Instance)
+        <!JSON_FORMAT_REDUNDANT_DEFAULT!>Json { /*some comment*/ }<!>.encodeToString(Instance)
         val localDefaultFormat = <!JSON_FORMAT_REDUNDANT_DEFAULT!>Json {}<!>
         <!JSON_FORMAT_REDUNDANT_DEFAULT!>Json(Json.Default) {}<!>
         <!JSON_FORMAT_REDUNDANT_DEFAULT!>Json(Json) {}<!>
@@ -35,39 +35,39 @@ class SomeContainerClass {
         <!JSON_FORMAT_REDUNDANT_DEFAULT!>Json(builderAction = fun JsonBuilder.() = Unit)<!>
 
         "{}".let {
-            <!JSON_FORMAT_REDUNDANT_DEFAULT!>Json {}<!>.<!EXPERIMENTAL_API_USAGE!>decodeFromString<!><Any>(it)
+            <!JSON_FORMAT_REDUNDANT_DEFAULT!>Json {}<!>.decodeFromString<Any>(it)
         }
     }
 
     fun testReceiverWarnings() {
-        <!JSON_FORMAT_REDUNDANT!>Json {encodeDefaults = true}<!>.<!EXPERIMENTAL_API_USAGE!>encodeToString<!>(Instance)
-        val encoded = <!JSON_FORMAT_REDUNDANT!>Json {encodeDefaults = true}<!>.<!EXPERIMENTAL_API_USAGE!>encodeToString<!>(Instance)
-        <!JSON_FORMAT_REDUNDANT!>Json {encodeDefaults = true}<!>.<!EXPERIMENTAL_API_USAGE!>decodeFromString<!><Any>("{}")
+        <!JSON_FORMAT_REDUNDANT!>Json {encodeDefaults = true}<!>.encodeToString(Instance)
+        val encoded = <!JSON_FORMAT_REDUNDANT!>Json {encodeDefaults = true}<!>.encodeToString(Instance)
+        <!JSON_FORMAT_REDUNDANT!>Json {encodeDefaults = true}<!>.decodeFromString<Any>("{}")
         <!JSON_FORMAT_REDUNDANT!>Json {encodeDefaults = true}<!>.hashCode()
         <!JSON_FORMAT_REDUNDANT!>Json {encodeDefaults = true}<!>.toString()
 
-        <!JSON_FORMAT_REDUNDANT!>Json(noWarnFormat) {encodeDefaults = true}<!>.<!EXPERIMENTAL_API_USAGE!>encodeToString<!>(Instance)
-        <!JSON_FORMAT_REDUNDANT!>Json(builderAction = {encodeDefaults = true})<!>.<!EXPERIMENTAL_API_USAGE!>encodeToString<!>(Instance)
-        <!JSON_FORMAT_REDUNDANT!>Json(noWarnFormat, {encodeDefaults = true})<!>.<!EXPERIMENTAL_API_USAGE!>encodeToString<!>(Instance)
-        <!JSON_FORMAT_REDUNDANT!>Json(builderAction = fun JsonBuilder.() {encodeDefaults = true})<!>.<!EXPERIMENTAL_API_USAGE!>encodeToString<!>(Instance)
+        <!JSON_FORMAT_REDUNDANT!>Json(noWarnFormat) {encodeDefaults = true}<!>.encodeToString(Instance)
+        <!JSON_FORMAT_REDUNDANT!>Json(builderAction = {encodeDefaults = true})<!>.encodeToString(Instance)
+        <!JSON_FORMAT_REDUNDANT!>Json(noWarnFormat, {encodeDefaults = true})<!>.encodeToString(Instance)
+        <!JSON_FORMAT_REDUNDANT!>Json(builderAction = fun JsonBuilder.() {encodeDefaults = true})<!>.encodeToString(Instance)
 
         "{}".let {
-            <!JSON_FORMAT_REDUNDANT!>Json {encodeDefaults = true}<!>.<!EXPERIMENTAL_API_USAGE!>decodeFromString<!><Any>(it)
+            <!JSON_FORMAT_REDUNDANT!>Json {encodeDefaults = true}<!>.decodeFromString<Any>(it)
         }
     }
 
     fun testReceiverNoWarnings() {
         val localFormat = Json {encodeDefaults = true}
-        localFormat.<!EXPERIMENTAL_API_USAGE!>encodeToString<!>(Instance)
-        localFormat.<!EXPERIMENTAL_API_USAGE!>decodeFromString<!><Any>("{}")
+        localFormat.encodeToString(Instance)
+        localFormat.decodeFromString<Any>("{}")
         localFormat.hashCode()
         localFormat.toString()
     }
 
     fun testDefaultNoWarnings() {
         val localDefault = Json
-        Json.<!EXPERIMENTAL_API_USAGE!>encodeToString<!>(Instance)
-        Json.<!EXPERIMENTAL_API_USAGE!>decodeFromString<!><Any>("{}")
+        Json.encodeToString(Instance)
+        Json.decodeFromString<Any>("{}")
         Json.hashCode()
         Json.toString()
         Json(builderAction = this::builder)

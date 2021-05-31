@@ -100,15 +100,12 @@ class ExperimentalUsageChecker(project: Project) : CallChecker {
     }
 
     private fun FunctionDescriptor.findRelevantDataClassPropertyIfAny(context: CallCheckerContext): PropertyDescriptor? {
-        val nameAsString = name.asString()
+        val index = name.asString().removePrefix("component").toIntOrNull()
         val container = containingDeclaration
-        if (container is ClassDescriptor && container.isData && nameAsString.startsWith("component")) {
-            val index = nameAsString.substring(9).toIntOrNull()
-            if (index != null) {
-                val dataClassParameterDescriptor = container.unsubstitutedPrimaryConstructor?.valueParameters?.getOrNull(index - 1)
-                if (dataClassParameterDescriptor != null) {
-                    return context.trace.bindingContext[BindingContext.VALUE_PARAMETER_AS_PROPERTY, dataClassParameterDescriptor]
-                }
+        if (container is ClassDescriptor && container.isData && index != null) {
+            val dataClassParameterDescriptor = container.unsubstitutedPrimaryConstructor?.valueParameters?.getOrNull(index - 1)
+            if (dataClassParameterDescriptor != null) {
+                return context.trace.bindingContext[BindingContext.VALUE_PARAMETER_AS_PROPERTY, dataClassParameterDescriptor]
             }
         }
         return null
