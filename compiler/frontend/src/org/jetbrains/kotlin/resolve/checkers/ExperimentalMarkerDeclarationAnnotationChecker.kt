@@ -6,8 +6,6 @@
 package org.jetbrains.kotlin.resolve.checkers
 
 import org.jetbrains.kotlin.builtins.StandardNames
-import org.jetbrains.kotlin.config.LanguageFeature
-import org.jetbrains.kotlin.config.LanguageVersionSettings
 import org.jetbrains.kotlin.descriptors.CallableMemberDescriptor
 import org.jetbrains.kotlin.descriptors.ClassDescriptor
 import org.jetbrains.kotlin.descriptors.ModuleDescriptor
@@ -18,7 +16,6 @@ import org.jetbrains.kotlin.diagnostics.Errors
 import org.jetbrains.kotlin.lexer.KtTokens
 import org.jetbrains.kotlin.psi.*
 import org.jetbrains.kotlin.psi.psiUtil.getStrictParentOfType
-import org.jetbrains.kotlin.psi.psiUtil.parents
 import org.jetbrains.kotlin.resolve.AdditionalAnnotationChecker
 import org.jetbrains.kotlin.resolve.AnnotationChecker
 import org.jetbrains.kotlin.resolve.BindingContext
@@ -29,7 +26,6 @@ import org.jetbrains.kotlin.resolve.constants.KClassValue
 import org.jetbrains.kotlin.resolve.descriptorUtil.annotationClass
 import org.jetbrains.kotlin.resolve.descriptorUtil.fqNameSafe
 import org.jetbrains.kotlin.resolve.descriptorUtil.getAnnotationRetention
-import org.jetbrains.kotlin.utils.addToStdlib.firstIsInstanceOrNull
 import org.jetbrains.kotlin.utils.addToStdlib.safeAs
 
 class ExperimentalMarkerDeclarationAnnotationChecker(private val module: ModuleDescriptor) : AdditionalAnnotationChecker {
@@ -45,8 +41,7 @@ class ExperimentalMarkerDeclarationAnnotationChecker(private val module: ModuleD
     override fun checkEntries(
         entries: List<KtAnnotationEntry>,
         actualTargets: List<KotlinTarget>,
-        trace: BindingTrace,
-        languageVersionSettings: LanguageVersionSettings
+        trace: BindingTrace
     ) {
         var isAnnotatedWithExperimental = false
 
@@ -90,7 +85,7 @@ class ExperimentalMarkerDeclarationAnnotationChecker(private val module: ModuleD
         }
 
         if (isAnnotatedWithExperimental) {
-            checkMarkerTargetsAndRetention(entries, trace, languageVersionSettings)
+            checkMarkerTargetsAndRetention(entries, trace)
         }
     }
 
@@ -115,8 +110,7 @@ class ExperimentalMarkerDeclarationAnnotationChecker(private val module: ModuleD
 
     private fun checkMarkerTargetsAndRetention(
         entries: List<KtAnnotationEntry>,
-        trace: BindingTrace,
-        languageVersionSettings: LanguageVersionSettings
+        trace: BindingTrace
     ) {
         val associatedEntries = entries.associateWith { entry -> trace.bindingContext.get(BindingContext.ANNOTATION, entry) }.entries
         val targetEntry = associatedEntries.firstOrNull { (_, descriptor) ->
@@ -141,27 +135,9 @@ class ExperimentalMarkerDeclarationAnnotationChecker(private val module: ModuleD
         if (retentionEntry != null) {
             val (entry, descriptor) = retentionEntry
             when (val retention = descriptor?.getAnnotationRetention()) {
-                KotlinRetention.RUNTIME,
                 KotlinRetention.SOURCE -> trace.report(
-                    Errors.EXPERIMENTAL_ANNOTATION_WITH_WRONG_RETENTION.on(entry, retention.name, "replace retention with binary")
+                    Errors.EXPERIMENTAL_ANNOTATION_WITH_WRONG_RETENTION.on(entry, retention.name)
                 )
-            }
-        } else {
-            val annotationClass = entries.firstOrNull()?.parents?.firstIsInstanceOrNull<KtClass>()
-            if (annotationClass != null) {
-                if (languageVersionSettings.supportsFeature(LanguageFeature.ExplicitBinaryRetentionForOptInAnnotations)) {
-                    trace.report(
-                        Errors.EXPERIMENTAL_ANNOTATION_WITH_WRONG_RETENTION.on(
-                            annotationClass, "runtime", "set retention to binary"
-                        )
-                    )
-                } else {
-                    trace.report(
-                        Errors.EXPERIMENTAL_ANNOTATION_WITH_WRONG_RETENTION_WARNING.on(
-                            annotationClass, "runtime", "set retention to binary"
-                        )
-                    )
-                }
             }
         }
     }

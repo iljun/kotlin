@@ -16,4 +16,4 @@ class A {
 }
 
 @<!EXPERIMENTAL_IS_NOT_ENABLED!>RequiresOptIn<!>(level = <!EXPERIMENTAL_IS_NOT_ENABLED!>RequiresOptIn<!>.Level.ERROR)
-annotation <!EXPERIMENTAL_ANNOTATION_WITH_WRONG_RETENTION_WARNING!>class ExperimentalTime<!>
+annotation class ExperimentalTime

@@ -46,7 +46,7 @@ fun f5() {}
 // Usages of markers as types should be errors
 
 @RequiresOptIn
-annotation <!EXPERIMENTAL_ANNOTATION_WITH_WRONG_RETENTION_WARNING!>class Marker<!> {
+annotation class Marker {
     class NestedClass
 
     companion object {

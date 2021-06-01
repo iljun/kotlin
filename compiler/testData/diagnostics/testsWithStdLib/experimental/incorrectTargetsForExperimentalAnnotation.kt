@@ -13,7 +13,7 @@ annotation class E1
 
 @RequiresOptIn(level = RequiresOptIn.Level.WARNING)
 <!EXPERIMENTAL_ANNOTATION_WITH_WRONG_TARGET!>@Target(FILE)<!>
-annotation <!EXPERIMENTAL_ANNOTATION_WITH_WRONG_RETENTION_WARNING!>class E2<!>
+annotation class E2
 
 @RequiresOptIn(level = RequiresOptIn.Level.WARNING)
 <!EXPERIMENTAL_ANNOTATION_WITH_WRONG_TARGET!>@Target(EXPRESSION)<!>

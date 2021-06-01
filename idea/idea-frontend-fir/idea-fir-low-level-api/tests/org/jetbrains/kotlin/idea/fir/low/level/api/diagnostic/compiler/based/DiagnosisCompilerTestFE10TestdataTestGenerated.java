@@ -30015,11 +30015,6 @@ public class DiagnosisCompilerTestFE10TestdataTestGenerated extends AbstractDiag
                 runTest("compiler/testData/diagnostics/testsWithStdLib/experimental/noRetentionAfter.kt");
             }
 
-            @TestMetadata("noRetentionBefore.kt")
-            public void testNoRetentionBefore() throws Exception {
-                runTest("compiler/testData/diagnostics/testsWithStdLib/experimental/noRetentionBefore.kt");
-            }
-
             @TestMetadata("override.kt")
             public void testOverride() throws Exception {
                 runTest("compiler/testData/diagnostics/testsWithStdLib/experimental/override.kt");
