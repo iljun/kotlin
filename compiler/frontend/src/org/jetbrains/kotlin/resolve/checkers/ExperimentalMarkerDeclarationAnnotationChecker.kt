@@ -11,7 +11,6 @@ import org.jetbrains.kotlin.config.LanguageVersionSettings
 import org.jetbrains.kotlin.descriptors.CallableMemberDescriptor
 import org.jetbrains.kotlin.descriptors.ClassDescriptor
 import org.jetbrains.kotlin.descriptors.ModuleDescriptor
-import org.jetbrains.kotlin.descriptors.annotations.AnnotationUseSiteTarget
 import org.jetbrains.kotlin.descriptors.annotations.KotlinRetention
 import org.jetbrains.kotlin.descriptors.annotations.KotlinTarget
 import org.jetbrains.kotlin.diagnostics.Errors
@@ -72,8 +71,7 @@ class ExperimentalMarkerDeclarationAnnotationChecker(private val module: ModuleD
                 val useSiteTarget = entry.useSiteTarget?.getAnnotationUseSiteTarget()
                 if (annotated is KtCallableDeclaration &&
                     annotated !is KtPropertyAccessor &&
-                    useSiteTarget != AnnotationUseSiteTarget.PROPERTY_GETTER &&
-                    useSiteTarget != AnnotationUseSiteTarget.PROPERTY_SETTER &&
+                    useSiteTarget == null &&
                     annotated.hasModifier(KtTokens.OVERRIDE_KEYWORD)
                 ) {
                     val descriptor = trace.get(BindingContext.DECLARATION_TO_DESCRIPTOR, annotated)
