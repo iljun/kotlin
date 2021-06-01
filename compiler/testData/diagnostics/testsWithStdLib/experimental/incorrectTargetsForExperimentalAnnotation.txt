@@ -1,6 +1,7 @@
 package
 
 package api {
+    @get:api.E4 public val another: kotlin.Int = 42
     @get:api.E4 @set:api.E5 public var some: kotlin.Int
 
     public abstract class Another : api.Base {

@@ -51,6 +51,9 @@ var some: Int
     @E5
     set(value) {}
 
+<!EXPERIMENTAL_ANNOTATION_ON_GETTER!>@get:E4<!>
+val another: Int = 42
+
 class My {
     <!EXPERIMENTAL_ANNOTATION_ON_OVERRIDE!>@E6<!>
     override fun hashCode() = 0

@@ -51,6 +51,9 @@ var some: Int
     @E5
     set(value) {}
 
+@get:E4
+val another: Int = 42
+
 class My {
     @E6
     override fun hashCode() = 0

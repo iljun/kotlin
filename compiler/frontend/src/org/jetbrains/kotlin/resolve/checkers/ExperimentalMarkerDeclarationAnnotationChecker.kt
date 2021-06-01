@@ -11,6 +11,7 @@ import org.jetbrains.kotlin.config.LanguageVersionSettings
 import org.jetbrains.kotlin.descriptors.CallableMemberDescriptor
 import org.jetbrains.kotlin.descriptors.ClassDescriptor
 import org.jetbrains.kotlin.descriptors.ModuleDescriptor
+import org.jetbrains.kotlin.descriptors.annotations.AnnotationUseSiteTarget
 import org.jetbrains.kotlin.descriptors.annotations.KotlinRetention
 import org.jetbrains.kotlin.descriptors.annotations.KotlinTarget
 import org.jetbrains.kotlin.diagnostics.Errors
@@ -64,7 +65,9 @@ class ExperimentalMarkerDeclarationAnnotationChecker(private val module: ModuleD
             }
             val annotationClass = annotation.annotationClass ?: continue
             if (annotationClass.annotations.any { it.fqName in ExperimentalUsageChecker.EXPERIMENTAL_FQ_NAMES }) {
-                if (KotlinTarget.PROPERTY_GETTER in actualTargets) {
+                if (KotlinTarget.PROPERTY_GETTER in actualTargets ||
+                    entry.useSiteTarget?.getAnnotationUseSiteTarget() == AnnotationUseSiteTarget.PROPERTY_GETTER
+                ) {
                     trace.report(Errors.EXPERIMENTAL_ANNOTATION_ON_GETTER.on(entry))
                 }
                 val annotated = entry.getStrictParentOfType<KtAnnotated>() ?: continue
