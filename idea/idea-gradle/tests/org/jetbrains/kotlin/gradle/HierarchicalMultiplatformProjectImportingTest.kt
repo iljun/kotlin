@@ -138,7 +138,6 @@ class HierarchicalMultiplatformProjectImportingTest : MultiplePluginVersionGradl
             module("my-app.jvmMain") {
                 isHMPP(true)
                 targetPlatform(JvmPlatforms.jvm16)
-                libraryDependency("Gradle: org.jetbrains.kotlin:kotlin-stdlib-common:${gradleKotlinPluginVersion}", DependencyScope.COMPILE)
                 libraryDependency("Gradle: org.jetbrains.kotlin:kotlin-stdlib:${gradleKotlinPluginVersion}", DependencyScope.COMPILE)
                 libraryDependency("Gradle: org.jetbrains:annotations:13.0", DependencyScope.COMPILE)
                 moduleDependency("my-app.commonMain", DependencyScope.COMPILE)
@@ -152,7 +151,6 @@ class HierarchicalMultiplatformProjectImportingTest : MultiplePluginVersionGradl
                 targetPlatform(JvmPlatforms.jvm16)
                 libraryDependency("Gradle: junit:junit:4.12", DependencyScope.TEST)
                 libraryDependency("Gradle: org.hamcrest:hamcrest-core:1.3", DependencyScope.TEST)
-                libraryDependency("Gradle: org.jetbrains.kotlin:kotlin-stdlib-common:${gradleKotlinPluginVersion}", DependencyScope.TEST)
                 libraryDependency("Gradle: org.jetbrains.kotlin:kotlin-stdlib:${gradleKotlinPluginVersion}", DependencyScope.TEST)
                 libraryDependency("Gradle: org.jetbrains.kotlin:kotlin-test-annotations-common:${gradleKotlinPluginVersion}", DependencyScope.TEST)
                 libraryDependency("Gradle: org.jetbrains.kotlin:kotlin-test-common:${gradleKotlinPluginVersion}", DependencyScope.TEST)
@@ -595,6 +593,36 @@ class HierarchicalMultiplatformProjectImportingTest : MultiplePluginVersionGradl
 
             module("my-app.macosX64Test") { targetPlatform(macosX64) }
             module("my-app.macosX64Main") { targetPlatform(macosX64) }
+        }
+    }
+
+    @Test
+    @PluginTargetVersions()
+    fun testDependencyOnStdlibFromPlatformSourceSets() {
+        configureByFiles()
+        importProject()
+
+        checkProjectStructure(exhaustiveModuleList = false, exhaustiveSourceSourceRootList = false, exhaustiveDependencyList = true) {
+            module("my-app.jvmMain") {
+                moduleDependency("my-app.commonMain", DependencyScope.COMPILE)
+                libraryDependency("Gradle: org.jetbrains.kotlin:kotlin-stdlib-common:${gradleKotlinPluginVersion}", DependencyScope.COMPILE)
+                libraryDependency("Gradle: org.jetbrains.kotlin:kotlin-stdlib:${gradleKotlinPluginVersion}", DependencyScope.COMPILE)
+                libraryDependency("Gradle: org.jetbrains.kotlin:kotlin-stdlib-jdk7:${gradleKotlinPluginVersion}", DependencyScope.COMPILE)
+                libraryDependency("Gradle: org.jetbrains.kotlin:kotlin-stdlib-jdk8:${gradleKotlinPluginVersion}", DependencyScope.COMPILE)
+                libraryDependency("Gradle: org.jetbrains:annotations:13.0", DependencyScope.COMPILE)
+            }
+
+            module("my-app.jvmTest") {
+                moduleDependency("my-app.commonTest", DependencyScope.TEST)
+                moduleDependency("my-app.jvmMain", DependencyScope.TEST)
+                moduleDependency("my-app.jvmMain", DependencyScope.TEST)
+                moduleDependency("my-app.commonMain", DependencyScope.TEST)
+                libraryDependency("Gradle: org.jetbrains.kotlin:kotlin-stdlib-common:${gradleKotlinPluginVersion}", DependencyScope.TEST)
+                libraryDependency("Gradle: org.jetbrains.kotlin:kotlin-stdlib-jdk7:${gradleKotlinPluginVersion}", DependencyScope.TEST)
+                libraryDependency("Gradle: org.jetbrains.kotlin:kotlin-stdlib-jdk8:${gradleKotlinPluginVersion}", DependencyScope.TEST)
+                libraryDependency("Gradle: org.jetbrains.kotlin:kotlin-stdlib:${gradleKotlinPluginVersion}", DependencyScope.TEST)
+                libraryDependency("Gradle: org.jetbrains:annotations:13.0", DependencyScope.TEST)
+            }
         }
     }
 
