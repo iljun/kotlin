@@ -4,6 +4,13 @@ package api {
     @get:api.E4 public val another: kotlin.Int = 42
     @get:api.E4 @set:api.E5 public var some: kotlin.Int
 
+    public interface A {
+        public open override /*1*/ /*fake_override*/ fun equals(/*0*/ other: kotlin.Any?): kotlin.Boolean
+        public abstract fun f(): kotlin.Unit
+        public open override /*1*/ /*fake_override*/ fun hashCode(): kotlin.Int
+        public open override /*1*/ /*fake_override*/ fun toString(): kotlin.String
+    }
+
     public abstract class Another : api.Base {
         public constructor Another()
         @delegate:api.E6 public open override /*1*/ val bar: kotlin.Int
@@ -15,6 +22,13 @@ package api {
         public abstract override /*1*/ /*fake_override*/ fun kotlin.String.withReceiver(): kotlin.Unit
     }
 
+    public interface B {
+        public open override /*1*/ /*fake_override*/ fun equals(/*0*/ other: kotlin.Any?): kotlin.Boolean
+        @api.E6 public abstract fun f(): kotlin.Unit
+        public open override /*1*/ /*fake_override*/ fun hashCode(): kotlin.Int
+        public open override /*1*/ /*fake_override*/ fun toString(): kotlin.String
+    }
+
     public interface Base {
         public abstract val bar: kotlin.Int
         public abstract val baz: kotlin.Int
@@ -23,6 +37,20 @@ package api {
         public open override /*1*/ /*fake_override*/ fun hashCode(): kotlin.Int
         public open override /*1*/ /*fake_override*/ fun toString(): kotlin.String
         public abstract fun kotlin.String.withReceiver(): kotlin.Unit
+    }
+
+    public interface C1 : api.A, api.B {
+        public open override /*2*/ /*fake_override*/ fun equals(/*0*/ other: kotlin.Any?): kotlin.Boolean
+        public abstract override /*2*/ /*fake_override*/ fun f(): kotlin.Unit
+        public open override /*2*/ /*fake_override*/ fun hashCode(): kotlin.Int
+        public open override /*2*/ /*fake_override*/ fun toString(): kotlin.String
+    }
+
+    public interface C2 : api.B, api.A {
+        public open override /*2*/ /*fake_override*/ fun equals(/*0*/ other: kotlin.Any?): kotlin.Boolean
+        @api.E6 public abstract override /*2*/ /*fake_override*/ fun f(): kotlin.Unit
+        public open override /*2*/ /*fake_override*/ fun hashCode(): kotlin.Int
+        public open override /*2*/ /*fake_override*/ fun toString(): kotlin.String
     }
 
     public final class Derived : api.Base {
@@ -96,6 +124,22 @@ package api {
         public constructor My()
         public open override /*1*/ /*fake_override*/ fun equals(/*0*/ other: kotlin.Any?): kotlin.Boolean
         @api.E6 public open override /*1*/ fun hashCode(): kotlin.Int
+        public open override /*1*/ /*fake_override*/ fun toString(): kotlin.String
+    }
+
+    public final class X1 : api.C1 {
+        public constructor X1()
+        public open override /*1*/ /*fake_override*/ fun equals(/*0*/ other: kotlin.Any?): kotlin.Boolean
+        @api.E6 public open override /*1*/ fun f(): kotlin.Unit
+        public open override /*1*/ /*fake_override*/ fun hashCode(): kotlin.Int
+        public open override /*1*/ /*fake_override*/ fun toString(): kotlin.String
+    }
+
+    public final class X2 : api.C2 {
+        public constructor X2()
+        public open override /*1*/ /*fake_override*/ fun equals(/*0*/ other: kotlin.Any?): kotlin.Boolean
+        @api.E6 public open override /*1*/ fun f(): kotlin.Unit
+        public open override /*1*/ /*fake_override*/ fun hashCode(): kotlin.Int
         public open override /*1*/ /*fake_override*/ fun toString(): kotlin.String
     }
 }

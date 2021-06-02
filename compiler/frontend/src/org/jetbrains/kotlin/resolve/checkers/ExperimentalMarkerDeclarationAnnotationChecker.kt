@@ -14,6 +14,7 @@ import org.jetbrains.kotlin.descriptors.annotations.KotlinRetention
 import org.jetbrains.kotlin.descriptors.annotations.KotlinTarget
 import org.jetbrains.kotlin.diagnostics.Errors
 import org.jetbrains.kotlin.lexer.KtTokens
+import org.jetbrains.kotlin.name.FqName
 import org.jetbrains.kotlin.psi.*
 import org.jetbrains.kotlin.psi.psiUtil.getStrictParentOfType
 import org.jetbrains.kotlin.resolve.AdditionalAnnotationChecker
@@ -74,9 +75,7 @@ class ExperimentalMarkerDeclarationAnnotationChecker(private val module: ModuleD
                 ) {
                     val descriptor = trace.get(BindingContext.DECLARATION_TO_DESCRIPTOR, annotated)
                     if (descriptor is CallableMemberDescriptor &&
-                        descriptor.overriddenDescriptors.none { overriddenDescriptor ->
-                            overriddenDescriptor.annotations.any { it.fqName == annotationClass.fqNameSafe }
-                        }
+                        !descriptor.hasExperimentalOverriddenDescriptors(annotationClass.fqNameSafe)
                     ) {
                         trace.report(Errors.EXPERIMENTAL_ANNOTATION_ON_OVERRIDE.on(entry))
                     }
@@ -87,6 +86,25 @@ class ExperimentalMarkerDeclarationAnnotationChecker(private val module: ModuleD
         if (isAnnotatedWithExperimental) {
             checkMarkerTargetsAndRetention(entries, trace)
         }
+    }
+
+    private fun CallableMemberDescriptor.hasExperimentalOverriddenDescriptors(
+        experimentalFqName: FqName,
+        visited: MutableSet<CallableMemberDescriptor> = mutableSetOf()
+    ): Boolean {
+        if (this in visited) return false
+        visited += this
+        for (overridden in overriddenDescriptors) {
+            if (overridden.annotations.any { it.fqName == experimentalFqName }) {
+                return true
+            }
+            if (overridden.kind == CallableMemberDescriptor.Kind.FAKE_OVERRIDE &&
+                overridden.hasExperimentalOverriddenDescriptors(experimentalFqName)
+            ) {
+                return true
+            }
+        }
+        return false
     }
 
     private fun checkUseExperimentalUsage(annotationClasses: List<ConstantValue<*>>, trace: BindingTrace, entry: KtAnnotationEntry) {

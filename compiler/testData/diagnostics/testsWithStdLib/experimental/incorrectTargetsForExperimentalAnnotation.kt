@@ -87,3 +87,25 @@ abstract class Another : Base {
     @delegate:E6
     override val bar: Int by lazy { 42 }
 }
+
+interface A {
+    fun f()
+}
+
+interface B {
+    @E6
+    fun f()
+}
+
+interface C1 : A, B
+interface C2 : B, A
+
+class X1 : C1 {
+    @E6 // Ok
+    override fun f() {}
+}
+
+class X2 : C2 {
+    @E6 // Ok
+    override fun f() {}
+}
