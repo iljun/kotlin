@@ -62,3 +62,52 @@ class B : I
 fun main() {
     val x = listOf(A(), B())
 }
+
+@Marker
+class C {
+    operator fun getValue(x: Any?, y: Any?): String = ""
+}
+
+object O {
+    @OptIn(Marker::class)
+    operator fun provideDelegate(x: Any?, y: Any?): C = C()
+}
+
+val x: String by O
+
+@Marker
+class OperatorContainer : Comparable<OperatorContainer> {
+    @OptIn(Marker::class)
+    override fun compareTo(other: OperatorContainer): Int {
+        return 0
+    }
+}
+
+@OptIn(Marker::class)
+class AnotherContainer : Iterable<C> {
+    @OptIn(Marker::class)
+    override fun iterator(): Iterator<C> {
+        return object : Iterator<C> {
+            override fun hasNext(): Boolean {
+                return false
+            }
+
+            override fun next(): C {
+                throw java.util.NoSuchElementException()
+            }
+        }
+    }
+}
+
+@OptIn(Marker::class)
+operator fun String.minus(s: String) = OperatorContainer()
+
+@OptIn(Marker::class)
+operator fun String.invoke() = OperatorContainer()
+
+fun operatorContainerUsage(s: String, a: AnotherContainer) {
+    val res1 = s - s
+    val res2 = s()
+    val res3 = res1 > res2
+    for (c in a) {}
+}
