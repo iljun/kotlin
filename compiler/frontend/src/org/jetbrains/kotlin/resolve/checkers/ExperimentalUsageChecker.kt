@@ -173,16 +173,14 @@ class ExperimentalUsageChecker(project: Project) : CallChecker {
         fun DeclarationDescriptor.loadExperimentalities(
             moduleAnnotationsResolver: ModuleAnnotationsResolver,
             languageVersionSettings: LanguageVersionSettings,
-            visitedClassifiers: MutableSet<ClassifierDescriptor> = mutableSetOf()
+            visited: MutableSet<DeclarationDescriptor> = mutableSetOf()
         ): Set<Experimentality> {
-            if (this in visitedClassifiers) return emptySet()
-            if (this is ClassifierDescriptor) {
-                visitedClassifiers += this
-            }
+            if (this in visited) return emptySet()
+            visited += this
             val result = SmartSet.create<Experimentality>()
             if (this is CallableMemberDescriptor && kind == CallableMemberDescriptor.Kind.FAKE_OVERRIDE) {
                 for (overridden in overriddenDescriptors) {
-                    result.addAll(overridden.loadExperimentalities(moduleAnnotationsResolver, languageVersionSettings, visitedClassifiers))
+                    result.addAll(overridden.loadExperimentalities(moduleAnnotationsResolver, languageVersionSettings, visited))
                 }
                 return result
             }
@@ -193,18 +191,18 @@ class ExperimentalUsageChecker(project: Project) : CallChecker {
 
             if (this is CallableDescriptor && this !is ClassConstructorDescriptor) {
                 result.addAll(
-                    returnType.loadExperimentalities(moduleAnnotationsResolver, languageVersionSettings, visitedClassifiers)
+                    returnType.loadExperimentalities(moduleAnnotationsResolver, languageVersionSettings, visited)
                 )
                 result.addAll(
                     extensionReceiverParameter?.type.loadExperimentalities(
-                        moduleAnnotationsResolver, languageVersionSettings, visitedClassifiers
+                        moduleAnnotationsResolver, languageVersionSettings, visited
                     )
                 )
                 if (this is FunctionDescriptor) {
                     valueParameters.forEach {
                         result.addAll(
                             it.type.loadExperimentalities(
-                                moduleAnnotationsResolver, languageVersionSettings, visitedClassifiers
+                                moduleAnnotationsResolver, languageVersionSettings, visited
                             )
                         )
                     }
@@ -212,7 +210,7 @@ class ExperimentalUsageChecker(project: Project) : CallChecker {
             }
 
             if (this is TypeAliasDescriptor) {
-                result.addAll(expandedType.loadExperimentalities(moduleAnnotationsResolver, languageVersionSettings, visitedClassifiers))
+                result.addAll(expandedType.loadExperimentalities(moduleAnnotationsResolver, languageVersionSettings, visited))
             }
 
             if (annotations.any { it.fqName == WAS_EXPERIMENTAL_FQ_NAME }) {
@@ -224,7 +222,7 @@ class ExperimentalUsageChecker(project: Project) : CallChecker {
 
             val container = containingDeclaration
             if (container is ClassDescriptor && this !is ConstructorDescriptor) {
-                result.addAll(container.loadExperimentalities(moduleAnnotationsResolver, languageVersionSettings, visitedClassifiers))
+                result.addAll(container.loadExperimentalities(moduleAnnotationsResolver, languageVersionSettings, visited))
             }
 
             for (moduleAnnotationClassId in moduleAnnotationsResolver.getAnnotationsOnContainingModule(this)) {
@@ -238,7 +236,7 @@ class ExperimentalUsageChecker(project: Project) : CallChecker {
         private fun KotlinType?.loadExperimentalities(
             moduleAnnotationsResolver: ModuleAnnotationsResolver,
             languageVersionSettings: LanguageVersionSettings,
-            visitedClassifiers: MutableSet<ClassifierDescriptor>
+            visitedClassifiers: MutableSet<DeclarationDescriptor>
         ): Set<Experimentality> =
             if (this?.isError != false) emptySet()
             else constructor.declarationDescriptor?.loadExperimentalities(
