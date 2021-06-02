@@ -49,3 +49,16 @@ fun use(arg: NotExperimentalExtension) {
     arg.foo()
     arg.bar()
 }
+
+@Marker
+interface I
+
+@OptIn(Marker::class)
+class A : I
+
+@OptIn(Marker::class)
+class B : I
+
+fun main() {
+    val x = listOf(A(), B())
+}

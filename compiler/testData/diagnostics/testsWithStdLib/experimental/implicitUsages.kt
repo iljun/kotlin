@@ -49,3 +49,17 @@ fun use(arg: NotExperimentalExtension) {
     arg.foo()
     arg.<!EXPERIMENTAL_API_USAGE_ERROR!>bar<!>()
 }
+
+@Marker
+interface I
+
+@OptIn(Marker::class)
+class A : I
+
+@OptIn(Marker::class)
+class B : I
+
+fun main() {
+    val x = <!EXPERIMENTAL_API_USAGE_ERROR!>listOf<!>(A(), B())
+}
+

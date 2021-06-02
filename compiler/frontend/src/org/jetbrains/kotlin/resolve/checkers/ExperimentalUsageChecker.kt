@@ -243,7 +243,10 @@ class ExperimentalUsageChecker(project: Project) : CallChecker {
             if (this?.isError != false) emptySet()
             else constructor.declarationDescriptor?.loadExperimentalities(
                 moduleAnnotationsResolver, languageVersionSettings, visitedClassifiers
-            ).orEmpty()
+            ).orEmpty() + arguments.flatMap {
+                if (it.isStarProjection) emptySet()
+                else it.type.loadExperimentalities(moduleAnnotationsResolver, languageVersionSettings, visitedClassifiers)
+            }
 
         internal fun ClassDescriptor.loadExperimentalityForMarkerAnnotation(): Experimentality? {
             val experimental =
