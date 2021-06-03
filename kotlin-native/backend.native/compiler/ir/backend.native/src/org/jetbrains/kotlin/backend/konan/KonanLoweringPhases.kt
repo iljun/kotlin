@@ -143,7 +143,7 @@ internal val extractLocalClassesFromInlineBodies = NamedCompilerPhase(
         },
         name = "ExtractLocalClassesFromInlineBodies",
         description = "Extraction of local classes from inline bodies",
-        prerequisite = setOf(sharedVariablesPhase, inventNamesForLocalClasses),
+        prerequisite = setOf(sharedVariablesPhase), // TODO: add "soft" dependency on inventNamesForLocalClasses
         nlevels = 0,
         actions = modulePhaseActions
 )
@@ -222,7 +222,7 @@ internal val localFunctionsPhase = makeKonanFileOpPhase(
         },
         name = "LocalFunctions",
         description = "Local function lowering",
-        prerequisite = setOf(sharedVariablesPhase, inventNamesForLocalClasses)
+        prerequisite = setOf(sharedVariablesPhase) // TODO: add "soft" dependency on inventNamesForLocalClasses
 )
 
 internal val tailrecPhase = makeKonanFileLoweringPhase(
