@@ -152,10 +152,8 @@ class ExperimentalMarkerDeclarationAnnotationChecker(private val module: ModuleD
         }
         if (retentionEntry != null) {
             val (entry, descriptor) = retentionEntry
-            when (val retention = descriptor?.getAnnotationRetention()) {
-                KotlinRetention.SOURCE -> trace.report(
-                    Errors.EXPERIMENTAL_ANNOTATION_WITH_WRONG_RETENTION.on(entry, retention.name)
-                )
+            if (descriptor?.getAnnotationRetention() == KotlinRetention.SOURCE) {
+                trace.report(Errors.EXPERIMENTAL_ANNOTATION_WITH_WRONG_RETENTION.on(entry))
             }
         }
     }
