@@ -9,6 +9,7 @@ import kotlin.reflect.KClass
 
 @ExportForCompiler
 internal class KClassImpl<T : Any>(private val typeInfo: NativePtr) : KClass<T> {
+    // TODO: consider replacing '$' by another delimeter that can't be used in class name specified with backticks (``)
     override val simpleName: String?
         get() = getRelativeName(typeInfo, true)?.substringAfterLast('.')?.substringAfterLast('$')
 
