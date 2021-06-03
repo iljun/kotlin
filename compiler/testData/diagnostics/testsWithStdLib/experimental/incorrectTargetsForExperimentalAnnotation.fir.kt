@@ -109,3 +109,10 @@ class X2 : C2 {
     @E6 // Ok
     override fun f() {}
 }
+
+open class Y(val b: B): B by b
+
+class Z(b: B) : Y(b) {
+    @E6
+    override fun f() {}
+}
