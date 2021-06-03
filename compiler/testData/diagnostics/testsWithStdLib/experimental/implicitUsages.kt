@@ -59,8 +59,12 @@ class A : I
 @OptIn(Marker::class)
 class B : I
 
+@OptIn(Marker::class)
+typealias MyList = ArrayList<I>
+
 fun main() {
     val x = <!EXPERIMENTAL_API_USAGE_ERROR!>listOf<!>(A(), B())
+    val y = <!EXPERIMENTAL_API_USAGE_ERROR!>MyList<!>()
 }
 
 @Marker

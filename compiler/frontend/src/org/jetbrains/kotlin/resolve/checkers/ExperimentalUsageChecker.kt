@@ -47,6 +47,7 @@ import org.jetbrains.kotlin.resolve.descriptorUtil.fqNameSafe
 import org.jetbrains.kotlin.resolve.descriptorUtil.module
 import org.jetbrains.kotlin.storage.LockBasedStorageManager
 import org.jetbrains.kotlin.types.KotlinType
+import org.jetbrains.kotlin.types.KotlinTypeFactory.computeExpandedType
 import org.jetbrains.kotlin.types.isError
 import org.jetbrains.kotlin.utils.SmartSet
 import org.jetbrains.kotlin.utils.addIfNotNull
@@ -238,11 +239,15 @@ class ExperimentalUsageChecker(project: Project) : CallChecker {
             visitedClassifiers: MutableSet<DeclarationDescriptor>
         ): Set<Experimentality> =
             if (this?.isError != false) emptySet()
-            else constructor.declarationDescriptor?.loadExperimentalities(
-                moduleAnnotationsResolver, languageVersionSettings, visitedClassifiers
-            ).orEmpty() + arguments.flatMap {
-                if (it.isStarProjection) emptySet()
-                else it.type.loadExperimentalities(moduleAnnotationsResolver, languageVersionSettings, visitedClassifiers)
+            else {
+                (constructor as? TypeAliasDescriptor)?.computeExpandedType(arguments)?.loadExperimentalities(
+                    moduleAnnotationsResolver, languageVersionSettings, visitedClassifiers
+                ) ?: constructor.declarationDescriptor?.loadExperimentalities(
+                    moduleAnnotationsResolver, languageVersionSettings, visitedClassifiers
+                ).orEmpty() + arguments.flatMap {
+                    if (it.isStarProjection) emptySet()
+                    else it.type.loadExperimentalities(moduleAnnotationsResolver, languageVersionSettings, visitedClassifiers)
+                }
             }
 
         internal fun ClassDescriptor.loadExperimentalityForMarkerAnnotation(): Experimentality? {
