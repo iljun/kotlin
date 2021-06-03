@@ -9,6 +9,8 @@ import com.intellij.openapi.components.ServiceManager
 import com.intellij.openapi.project.Project
 import org.jetbrains.kotlin.analyzer.ModuleInfo
 import org.jetbrains.kotlin.caches.project.cacheInvalidatingOnRootModifications
+import org.jetbrains.kotlin.utils.addToStdlib.firstIsInstanceOrNull
+import org.jetbrains.kotlin.utils.addToStdlib.safeAs
 import java.util.ArrayDeque
 
 /**
@@ -46,6 +48,8 @@ class SdkInfoCacheImpl(private val project: Project) : SdkInfoCache {
     }
 
     private fun doFindSdk(moduleInfo: ModuleInfo): SdkInfo? {
+        moduleInfo.safeAs<SdkInfo>()?.let { return it }
+
         val libraryDependenciesCache = LibraryDependenciesCache.getInstance(this.project)
 
         val checkedLibraryInfo = mutableSetOf<ModuleInfo>()
@@ -58,7 +62,7 @@ class SdkInfoCacheImpl(private val project: Project) : SdkInfoCache {
             val poll = stack.poll()
             if (!checkedLibraryInfo.add(poll)) continue
 
-            val dependencies = run {
+            stack += run {
                 if (poll is LibraryInfo) {
                     val (libraries, sdks) = libraryDependenciesCache.getLibrariesAndSdksUsedWith(poll)
                     sdks.firstOrNull()?.let { return it }
@@ -66,12 +70,9 @@ class SdkInfoCacheImpl(private val project: Project) : SdkInfoCache {
                 } else {
                     poll.dependencies()
                 }
-            }.filter { !checkedLibraryInfo.contains(it) }
-
-            dependencies.firstOrNull { it is SdkInfo }
-                ?.let { return it as SdkInfo }
-
-            stack += dependencies
+            }
+                .also { dependencies -> dependencies.firstIsInstanceOrNull<SdkInfo>()?.let<SdkInfo, Unit> { return it } }
+                .filter { !checkedLibraryInfo.contains(it) }
         }
 
         return null
