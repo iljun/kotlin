@@ -6,6 +6,7 @@
 package org.jetbrains.kotlin.idea.caches.project
 
 import com.intellij.openapi.components.ServiceManager
+import com.intellij.openapi.progress.ProgressManager
 import com.intellij.openapi.project.Project
 import org.jetbrains.kotlin.analyzer.ModuleInfo
 import org.jetbrains.kotlin.caches.project.cacheInvalidatingOnRootModifications
@@ -59,6 +60,7 @@ class SdkInfoCacheImpl(private val project: Project) : SdkInfoCache {
 
         // bfs
         while (stack.isNotEmpty()) {
+            ProgressManager.checkCanceled()
             val poll = stack.poll()
             if (!checkedLibraryInfo.add(poll)) continue
 
@@ -69,10 +71,10 @@ class SdkInfoCacheImpl(private val project: Project) : SdkInfoCache {
                     libraries
                 } else {
                     poll.dependencies()
+                        .also { dependencies -> dependencies.firstIsInstanceOrNull<SdkInfo>()?.let { return it } }
                 }
             }
-                .also { dependencies -> dependencies.firstIsInstanceOrNull<SdkInfo>()?.let<SdkInfo, Unit> { return it } }
-                .filter { !checkedLibraryInfo.contains(it) }
+
         }
 
         return null
