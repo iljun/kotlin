@@ -41,14 +41,17 @@ class SdkInfoCacheImpl(private val project: Project) : SdkInfoCache {
         get() = project.cacheInvalidatingOnRootModifications { mutableMapOf() }
 
     override fun findOrGetCachedSdk(moduleInfo: ModuleInfo): SdkInfo? {
-        if (!cache.containsKey(moduleInfo)) {
-            cache[moduleInfo] = doFindSdk(moduleInfo)
-        }
+        val instance = cache
+        synchronized(instance) {
+            if (!instance.containsKey(moduleInfo)) {
+                instance[moduleInfo] = doFindSdk(instance, moduleInfo)
+            }
 
-        return cache[moduleInfo]
+            return instance[moduleInfo]
+        }
     }
 
-    private fun doFindSdk(moduleInfo: ModuleInfo): SdkInfo? {
+    private fun doFindSdk(cache: MutableMap<ModuleInfo, SdkInfo?>, moduleInfo: ModuleInfo): SdkInfo? {
         moduleInfo.safeAs<SdkInfo>()?.let { return it }
 
         val libraryDependenciesCache = LibraryDependenciesCache.getInstance(this.project)
@@ -84,7 +87,7 @@ class SdkInfoCacheImpl(private val project: Project) : SdkInfoCache {
 
                 dependencies.forEach { dependency ->
                     cache[dependency]?.let {
-                        (stack + dependency) to it
+                        return (stack + dependency) to it
                     }
                     if (!cache.containsKey(dependency)) {
                         stacks.add(stack + dependency)
