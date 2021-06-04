@@ -6,7 +6,6 @@
 package org.jetbrains.kotlin.idea.caches.project
 
 import com.intellij.openapi.components.ServiceManager
-import com.intellij.openapi.progress.ProgressManager
 import com.intellij.openapi.project.Project
 import org.jetbrains.kotlin.analyzer.ModuleInfo
 import org.jetbrains.kotlin.caches.project.cacheInvalidatingOnRootModifications
@@ -53,30 +52,51 @@ class SdkInfoCacheImpl(private val project: Project) : SdkInfoCache {
 
         val libraryDependenciesCache = LibraryDependenciesCache.getInstance(this.project)
 
-        val checkedLibraryInfo = mutableSetOf<ModuleInfo>()
-        val stack = ArrayDeque<ModuleInfo>()
+        // dfs
+        fun depthLookup(stacks: ArrayDeque<List<ModuleInfo>>): Pair<List<ModuleInfo>?, SdkInfo?> {
+            while (stacks.isNotEmpty()) {
+                val stack = stacks.poll()
 
-        stack += moduleInfo
+                val item = stack.last()
+                if (cache.containsKey(item)) {
+                    cache[item]?.let { return stack to it } ?: continue
+                }
 
-        // bfs
-        while (stack.isNotEmpty()) {
-            ProgressManager.checkCanceled()
-            val poll = stack.poll()
-            if (!checkedLibraryInfo.add(poll)) continue
+                cache[item] = null
+                val dependencies = run {
+                    if (item is LibraryInfo) {
+                        val (libraries, sdks) = libraryDependenciesCache.getLibrariesAndSdksUsedWith(item)
+                        sdks.firstOrNull()?.let {
+                            return stack to it
+                        }
+                        libraries
+                    } else {
+                        item.dependencies()
+                            .also { dependencies ->
+                                dependencies.firstIsInstanceOrNull<SdkInfo>()?.let {
+                                    return stack to it
+                                }
+                            }
+                    }
+                }
 
-            stack += run {
-                if (poll is LibraryInfo) {
-                    val (libraries, sdks) = libraryDependenciesCache.getLibrariesAndSdksUsedWith(poll)
-                    sdks.firstOrNull()?.let { return it }
-                    libraries
-                } else {
-                    poll.dependencies()
-                        .also { dependencies -> dependencies.firstIsInstanceOrNull<SdkInfo>()?.let { return it } }
+                dependencies.forEach { dependency ->
+                    cache[dependency]?.let {
+                        (stack + dependency) to it
+                    }
+                    if (!cache.containsKey(dependency)) {
+                        stacks.add(stack + dependency)
+                    }
                 }
             }
-
+            return null to null
         }
 
-        return null
+        val (stack, sdkInfo) =
+            depthLookup(ArrayDeque<List<ModuleInfo>>().also {
+                it.add(listOf(moduleInfo))
+            })
+        sdkInfo?.let { stack?.forEach { cache[it] = sdkInfo } }
+        return sdkInfo
     }
 }
