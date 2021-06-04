@@ -6,6 +6,7 @@
 package org.jetbrains.kotlin.idea.caches.project
 
 import com.intellij.openapi.components.ServiceManager
+import com.intellij.openapi.progress.ProgressManager
 import com.intellij.openapi.project.Project
 import org.jetbrains.kotlin.analyzer.ModuleInfo
 import org.jetbrains.kotlin.caches.project.cacheInvalidatingOnRootModifications
@@ -55,6 +56,7 @@ class SdkInfoCacheImpl(private val project: Project) : SdkInfoCache {
         // dfs
         fun depthLookup(stacks: ArrayDeque<List<ModuleInfo>>): Pair<List<ModuleInfo>?, SdkInfo?> {
             while (stacks.isNotEmpty()) {
+                ProgressManager.checkCanceled()
                 val stack = stacks.poll()
 
                 val item = stack.last()
