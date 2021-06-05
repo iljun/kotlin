@@ -41,7 +41,9 @@ class SdkInfoCacheImpl(private val project: Project) : SdkInfoCache {
         get() = project.cacheInvalidatingOnRootModifications { mutableMapOf() }
 
     override fun findOrGetCachedSdk(moduleInfo: ModuleInfo): SdkInfo? {
+        // get an operate on the fixed instance of a cache to avoid case of roots modification in the middle of lookup
         val instance = cache
+        // synchronized is needed as well for `doFindSdk` that does multiple writes during lookup
         synchronized(instance) {
             if (!instance.containsKey(moduleInfo)) {
                 instance[moduleInfo] = doFindSdk(instance, moduleInfo)
@@ -56,41 +58,52 @@ class SdkInfoCacheImpl(private val project: Project) : SdkInfoCache {
 
         val libraryDependenciesCache = LibraryDependenciesCache.getInstance(this.project)
 
-        // dfs
-        fun depthLookup(stacks: ArrayDeque<List<ModuleInfo>>): Pair<List<ModuleInfo>?, SdkInfo?> {
-            while (stacks.isNotEmpty()) {
+        // return value (graph, sdk) is used to mark entire graph could be resolved to sdk (when sdk is not a null)
+        fun depthLookup(graphs: ArrayDeque<List<ModuleInfo>>): Pair<List<ModuleInfo>?, SdkInfo?> {
+            // graphs is a stack of graphs is used to implement DFS without recursion
+            // it depends on a number of libs, that could be > 10k for a huge monorepos
+            while (graphs.isNotEmpty()) {
                 ProgressManager.checkCanceled()
-                val stack = stacks.poll()
+                // graph of DFS from the root i.e from `moduleInfo`
+                val graph = graphs.poll()
 
-                val item = stack.last()
-                if (cache.containsKey(item)) {
-                    cache[item]?.let { return stack to it } ?: continue
+                val last = graph.last()
+                if (cache.containsKey(last)) {
+                    // the result could be immediately returned when cache already has it
+                    cache[last]?.let { return graph to it }
+                    // or it is known that the item graph is a dead end and no reason to process it again
+                        ?: continue
                 }
 
-                cache[item] = null
+                // don't know result yet, have to mark as a dead end to avoid repetition
+                // note: entire graph will be marked as resolved when anything deeper will be found
+                cache[last] = null
                 val dependencies = run {
-                    if (item is LibraryInfo) {
-                        val (libraries, sdks) = libraryDependenciesCache.getLibrariesAndSdksUsedWith(item)
+                    if (last is LibraryInfo) {
+                        // use a special case for LibraryInfo to reuse values from a library dependencies cache
+                        val (libraries, sdks) = libraryDependenciesCache.getLibrariesAndSdksUsedWith(last)
                         sdks.firstOrNull()?.let {
-                            return stack to it
+                            return graph to it
                         }
                         libraries
                     } else {
-                        item.dependencies()
+                        last.dependencies()
                             .also { dependencies ->
                                 dependencies.firstIsInstanceOrNull<SdkInfo>()?.let {
-                                    return stack to it
+                                    return graph to it
                                 }
                             }
                     }
                 }
 
                 dependencies.forEach { dependency ->
+                    // sdk is found when some dependency is already resolved
                     cache[dependency]?.let {
-                        return (stack + dependency) to it
+                        return (graph + dependency) to it
                     }
+                    // otherwise add a new graph of (existed graph + dependency) as candidates for DFS lookup
                     if (!cache.containsKey(dependency)) {
-                        stacks.add(stack + dependency)
+                        graphs.add(graph + dependency)
                     }
                 }
             }
@@ -99,8 +112,10 @@ class SdkInfoCacheImpl(private val project: Project) : SdkInfoCache {
 
         val (stack, sdkInfo) =
             depthLookup(ArrayDeque<List<ModuleInfo>>().also {
+                // initial graph item
                 it.add(listOf(moduleInfo))
             })
+        // when sdk is found: mark all graph elements could be resolved to the same sdk
         sdkInfo?.let { stack?.forEach { cache[it] = sdkInfo } }
         return sdkInfo
     }
