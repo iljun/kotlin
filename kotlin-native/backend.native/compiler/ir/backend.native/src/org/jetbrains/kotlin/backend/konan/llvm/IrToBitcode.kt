@@ -1177,7 +1177,7 @@ internal class CodeGeneratorVisitor(val context: Context, val lifetimes: Map<IrE
 
         val whenEmittingContext = WhenEmittingContext(expression)
 
-        generateDebugTrambolineIf("when", expression) { context.config.generateWhenTrampoline }
+        generateDebugTrambolineIf("when", expression)
         expression.branches.forEach {
             val bbNext = if (it == expression.branches.last())
                              null
@@ -1197,9 +1197,9 @@ internal class CodeGeneratorVisitor(val context: Context, val lifetimes: Map<IrE
         }
     }
 
-    private fun generateDebugTrambolineIf(name: String, expression: IrExpression, conditions: () -> Boolean) {
+    private fun generateDebugTrambolineIf(name: String, expression: IrExpression) {
         val generationContext = (currentCodeContext.functionScope() as? FunctionScope)?.functionGenerationContext
-                .takeIf { conditions() }
+                .takeIf { context.config.generateDebugTrampoline }
         generationContext?.basicBlock(name, expression.startLocation)?.let {
             generationContext.br(it)
             generationContext.positionAtEnd(it)
@@ -1828,7 +1828,7 @@ internal class CodeGeneratorVisitor(val context: Context, val lifetimes: Map<IrE
         context.log{"evaluateReturnableBlock         : ${value.statements.forEach { ir2string(it) }}"}
 
         val returnableBlockScope = ReturnableBlockScope(value)
-        generateDebugTrambolineIf("inline", value) { context.config.generateInlinedBodyTrampoline }
+        generateDebugTrambolineIf("inline", value)
         using(returnableBlockScope) {
             using(VariableScope()) {
                 value.statements.forEach {
