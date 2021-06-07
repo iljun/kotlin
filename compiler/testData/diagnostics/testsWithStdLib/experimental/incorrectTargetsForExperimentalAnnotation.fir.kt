@@ -83,9 +83,13 @@ class Derived : Base {
     override fun @receiver:E6 String.withReceiver() {}
 }
 
-abstract class Another : Base {
+abstract class Another(@param:E6 val x: String) : Base {
     @delegate:E6
     override val bar: Int by lazy { 42 }
+
+    fun baz(@E6 param: Int) {
+        @E6 val x = param
+    }
 }
 
 interface A {
