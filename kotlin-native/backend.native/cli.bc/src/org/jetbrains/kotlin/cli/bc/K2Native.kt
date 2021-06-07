@@ -183,7 +183,7 @@ class K2Native : CLICompiler<K2NativeCompilerArguments>() {
                     "disable" -> false
                     null -> null
                     else -> {
-                        configuration.report(ERROR, "Unsupported -Xg-generate-inline-function-body-marker= value: $it. Possible values are 'enable'/'disable'")
+                        configuration.report(ERROR, "Unsupported -Xg-generate-when-marker= value: $it. Possible values are 'enable'/'disable'")
                         null
                     }
                 })
