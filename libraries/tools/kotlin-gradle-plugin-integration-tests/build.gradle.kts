@@ -73,7 +73,7 @@ val cleanTestKitCacheTask = tasks.register<Delete>("cleanTestKitCache") {
 }
 
 fun Test.includeMppAndAndroid(include: Boolean) = includeTestsWithPattern(include) {
-    addAll(listOf("*Multiplatform*", "*Mpp*", "*Android*"))
+    addAll(listOf("*Multiplatform*", "*Mpp*", "*Android*", "*Agp*"))
 }
 
 fun Test.includeNative(include: Boolean) = includeTestsWithPattern(include) {

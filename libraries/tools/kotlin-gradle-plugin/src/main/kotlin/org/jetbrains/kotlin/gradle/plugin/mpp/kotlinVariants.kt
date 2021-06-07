@@ -108,7 +108,7 @@ class JointAndroidKotlinTargetComponent(
     override fun getName(): String = lowerCamelCaseName(target.targetName, *flavorNames.toTypedArray())
 
     override val publishable: Boolean
-        get() = target.publishable
+        get() = nestedVariants.any { it.publishable }
 
     override val defaultArtifactId: String =
         dashSeparatedName(

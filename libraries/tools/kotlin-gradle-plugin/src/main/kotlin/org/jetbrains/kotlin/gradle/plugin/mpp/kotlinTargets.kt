@@ -104,6 +104,9 @@ abstract class AbstractKotlinTarget(
             val adhocVariant = softwareComponentFactory.adhoc(kotlinVariant.name)
 
             project.whenEvaluated {
+                if (!kotlinVariant.publishable) // need to check this in afterEvaluate for Android variants
+                    return@whenEvaluated
+
                 (kotlinVariant as SoftwareComponentInternal).usages.filterIsInstance<KotlinUsageContext>().forEach { kotlinUsageContext ->
                     val publishedConfigurationName = publishedConfigurationName(kotlinUsageContext.name)
                     val configuration = project.configurations.findByName(publishedConfigurationName)
