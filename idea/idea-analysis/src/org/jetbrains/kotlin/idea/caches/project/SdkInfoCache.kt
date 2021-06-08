@@ -41,7 +41,6 @@ class SdkInfoCacheImpl(private val project: Project) : SdkInfoCache {
     value class SdkDependency(val sdk: SdkInfo?)
 
     private val cache: MutableMap<ModuleInfo, SdkDependency>
-        // Note: it's ok to use thread-unsafe map, because 'doFindSdk' is pure
         get() = project.cacheInvalidatingOnRootModifications { concurrentMapOf() }
 
     override fun findOrGetCachedSdk(moduleInfo: ModuleInfo): SdkInfo? {
@@ -49,14 +48,17 @@ class SdkInfoCacheImpl(private val project: Project) : SdkInfoCache {
         val instance = cache
 
         if (!instance.containsKey(moduleInfo)) {
-            instance[moduleInfo] = doFindSdk(instance, moduleInfo)
+            findSdk(instance, moduleInfo)
         }
 
         return instance[moduleInfo]?.sdk
     }
 
-    private fun doFindSdk(cache: MutableMap<ModuleInfo, SdkDependency>, moduleInfo: ModuleInfo): SdkDependency {
-        moduleInfo.safeAs<SdkDependency>()?.let { return it }
+    private fun findSdk(cache: MutableMap<ModuleInfo, SdkDependency>, moduleInfo: ModuleInfo) {
+        moduleInfo.safeAs<SdkDependency>()?.let {
+            cache[moduleInfo] = it
+            return
+        }
 
         val libraryDependenciesCache = LibraryDependenciesCache.getInstance(this.project)
         val visitedModuleInfos = mutableSetOf<ModuleInfo>()
@@ -76,7 +78,11 @@ class SdkInfoCacheImpl(private val project: Project) : SdkInfoCache {
 
                 val last = graph.last()
                 // the result could be immediately returned when cache already has it
-                cache[last]?.let { return@run graph to it }
+                val cached = cache[last]
+                if (cached != null) {
+                    cached.sdk?.let { return@run graph to cached }
+                    continue
+                }
 
                 if (!visitedModuleInfos.add(last)) continue
 
@@ -104,14 +110,25 @@ class SdkInfoCacheImpl(private val project: Project) : SdkInfoCache {
                         return@run (graph + dependency) to it
                     } ?: run {
                         // otherwise add a new graph of (existed graph + dependency) as candidates for DFS lookup
-                        graphs.add(graph + dependency)
+                        if (!visitedModuleInfos.contains(dependency)) {
+                            graphs.add(graph + dependency)
+                        }
                     }
                 }
             }
-            return@run null to SdkDependency(null)
+            return@run null to noSdkDependency
         }
         // when sdk is found: mark all graph elements could be resolved to the same sdk
-        path?.forEach { cache[it] = sdkInfo }
-        return sdkInfo
+        path?.let {
+            it.forEach { info -> cache[info] = sdkInfo }
+
+            visitedModuleInfos.removeAll(it)
+        }
+        // mark all visited modules (apart of found path) as dead ends
+        visitedModuleInfos.forEach { info -> cache[info] = noSdkDependency }
+    }
+
+    companion object {
+        private val noSdkDependency = SdkDependency(null)
     }
 }
