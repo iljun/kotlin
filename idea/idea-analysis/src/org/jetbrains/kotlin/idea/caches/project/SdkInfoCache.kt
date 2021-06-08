@@ -105,10 +105,13 @@ class SdkInfoCacheImpl(private val project: Project) : SdkInfoCache {
                 }
 
                 dependencies.forEach { dependency ->
-                    // sdk is found when some dependency is already resolved
-                    cache[dependency]?.let {
-                        return@run (graph + dependency) to it
-                    } ?: run {
+                    val sdkDependency = cache[dependency]
+                    if (sdkDependency != null) {
+                        sdkDependency.sdk?.let {
+                            // sdk is found when some dependency is already resolved
+                            return@run (graph + dependency) to sdkDependency
+                        }
+                    } else {
                         // otherwise add a new graph of (existed graph + dependency) as candidates for DFS lookup
                         if (!visitedModuleInfos.contains(dependency)) {
                             graphs.add(graph + dependency)
