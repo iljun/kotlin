@@ -74,6 +74,10 @@ class SdkInfoCacheImpl(private val project: Project) : SdkInfoCache {
             while (graphs.isNotEmpty()) {
                 ProgressManager.checkCanceled()
                 // graph of DFS from the root i.e from `moduleInfo`
+
+                // note: traverse of graph goes in a depth over the most left edge:
+                // - poll() retrieves and removes the head of the queue
+                // - push(element) inserts the element at the front of the deque
                 val graph = graphs.poll()
 
                 val last = graph.last()
@@ -114,7 +118,7 @@ class SdkInfoCacheImpl(private val project: Project) : SdkInfoCache {
                     } else {
                         // otherwise add a new graph of (existed graph + dependency) as candidates for DFS lookup
                         if (!visitedModuleInfos.contains(dependency)) {
-                            graphs.add(graph + dependency)
+                            graphs.push(graph + dependency)
                         }
                     }
                 }
